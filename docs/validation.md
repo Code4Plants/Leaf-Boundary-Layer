@@ -58,8 +58,6 @@ Geometric mean of predicted/observed by angle-of-attack bin (windward / leeward 
 
 ## Notes
 
-- Uniform-heat-flux plates use the average coefficient 0.680 (mean temperature difference),
-  not 0.906; this removes most of the former laminar bias.
 - Blunt bodies (Re·t/L ≥ 2000) are not described by the model: the assumption "turbulent
   from the leading edge" overpredicts thick disks by up to a factor of two.
 - The free-convection data of Hassani & Hollands (1989, disks and squares, Ra 18–7.6e7) and
