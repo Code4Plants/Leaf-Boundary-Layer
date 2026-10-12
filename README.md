@@ -214,6 +214,11 @@ matlab/tests/testGraefeFreeConvection.m, matlab/runTests.m, matlab/exampleFig6.m
 reference/reference_values.json    cross-check cases (free + mixed)
 ```
 
+## References
+
+`docs/references.md` lists all sources of the model and of the validation data with
+verified DOIs (`docs/references.bib` for BibTeX); `docs/validation.md` describes the fit.
+
 ## License
 
 GPL-3.0 (see LICENSE). Please cite the paper above when using the model

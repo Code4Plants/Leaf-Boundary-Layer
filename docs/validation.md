@@ -9,12 +9,16 @@ forced convection (fit set: 815 rows of thin plates with Re·t/L < 2000 and wind
 blockage ≤ 0.12; the thicker bodies of aus der Wiesche & Helcig 2016 and Motwani et al.
 1985 are outside the fit).
 
-Sources: Chen, Ibbetson & Milford (1988a, b), Haseba (1973), Haseba & Ito (1984),
-Sparrow & Tien (1977), Sparrow, Ramsey & Mass (1979), Parkhurst et al. (1968), Powell
-(1940), Schuepp (1993), Ramirez, Murray & Fitzpatrick (2002), Kobus & Shumway (2006);
-Re 1.3e3–1.6e5, angle of attack 0–90°, windward, leeward and two-sided measurements,
-turbulence intensities 0.2–22 %, heat and mass (naphthalene, evaporation, electrochemical)
-transfer converted to Nu at Pr = 0.71.
+Sources (full references in `references.md` / `references.bib`): Chen, Ibbetson & Milford
+(1988a, b), Haseba (1973), Haseba & Ito (1984), Sparrow & Tien (1977), Sparrow, Ramsey &
+Mass (1979), Parkhurst et al. (1968), Powell (1940), Schuepp (1993), Ramirez, Murray &
+Fitzpatrick (2002), Kobus & Shumway (2006); blunt bodies from Motwani, Gaitonde & Sukhatme
+(1985) and aus der Wiesche & Helcig (2016); Re 1.3e3–1.6e5, angle of attack 0–90°,
+windward, leeward and two-sided measurements, turbulence intensities 0.2–22 %, heat and
+mass (naphthalene, evaporation, electrochemical) transfer converted to Nu at Pr = 0.71.
+Free-convection checks: Hassani & Hollands (1989), Kobus & Wedekind (2001, 2002).
+Model ingredients: Lienhard (2020), Mayle (1991), Kottke, Blenke & Schmidt (1977),
+Yovanovich & Jafarpur (1993), Massman (1998).
 
 ## Model
 
