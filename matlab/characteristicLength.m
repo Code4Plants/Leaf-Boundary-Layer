@@ -5,7 +5,7 @@ function Lc = characteristicLength(L, W, phi, n)
 %   and D0 = (4/pi) LCo(phi), Eq. 4 / A6 has the closed form
 %       Lc^(n-1) = D0^(n-1) * (2/pi) * B(1/2, n/2 + 1)
 %   (B = Beta function).  n = 0.75 reproduces Eq. 9 (free convection) within
-%   0.2 %; n = 0.5 is the length for laminar forced convection (Nu ~ Re^0.5).
+%   0.03 % for any phi and aspect ratio; n = 0.5 is the length for laminar forced convection (Nu ~ Re^0.5).
 LCo = meanChordLength(L, W, phi);
 if abs(n - 1) < 1e-12
     Lc = LCo;

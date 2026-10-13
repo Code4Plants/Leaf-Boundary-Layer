@@ -26,7 +26,7 @@ Yovanovich & Jafarpur (1993), Massman (1998).
 Nu_0  = f_e · Nu_Lienhard(Re, TI, bc)                       Lienhard (2020) transition, onset Re_l(TI) after Mayle (1991)
 windward: Nu_W = Nu_0 (1 + a_W sin β)
 leeward:  Nu_B = Nu_0 [w (1 + a_R sin 2β) + (1 − w) c_w],    w = exp(−(β/β_s)²)
-two-sided measurements: mean of both sides; conduction limit Nu_c blended (Yovanovich & Jafarpur 1994)
+two-sided measurements: mean of both sides; conduction limit Nu_c blended (Yovanovich & Jafarpur 1993)
 ```
 
 | Parameter | Value | Std. error | Meaning |
@@ -55,6 +55,9 @@ only (143 rows): bias −1.9 % (−15.3 % without f_e), rRMSE 11.4 % (20.2 %).
 | Schuepp 1993 | leeward | 72 | 30.0 | −1.9 |
 | Ramirez 2002 (thin subset) | windward / leeward | 8 / 7 | 17.4 / 34.5 | −14.4 / −5.3 |
 | Kobus 2006 | both | 17 | 36.3 | +19.8 |
+
+The rows listed above sum to 793 of the 815 fit rows; the remaining 22 rows are not
+itemised per source (the digitised data set is not part of this repository).
 
 Geometric mean of predicted/observed by angle-of-attack bin (windward / leeward / both):
 0–15° 1.04 / 1.08 / 0.98; 15–30° 1.04 / 1.02 / 0.85; 30–45° 0.96 / 0.99 / 1.09;

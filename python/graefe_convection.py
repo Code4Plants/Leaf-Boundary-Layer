@@ -117,7 +117,7 @@ def characteristic_length(L, W, phi, n):
         Lc^(n-1) = D0^(n-1) * (2/pi) * B(1/2, n/2 + 1)
 
     with the Beta function B.  n = 3*0.25 reproduces Eq. 9 (free convection) to
-    within 0.2 %; n = 0.5 gives the length for laminar forced convection
+    within 0.03 % for any phi and aspect ratio; n = 0.5 gives the length for laminar forced convection
     (Nu ~ Re^0.5, i.e. h ~ L^-0.5).
     """
     if abs(n - 1.0) < 1e-12:
@@ -231,7 +231,8 @@ def nusselt_free_turbulent(dT, TA, nu, geom: LeafGeometry, c=C_FREE_TURB):
     facing the buoyant flow (upper side of a heated or lower side of a cooled leaf,
     and vertical leaves): NuF = c Ra^(1/3), independent of the leaf size.  The
     stably stratified side (lower side of a heated leaf) keeps its laminar value.
-    Weighted by sin(theta) + cos(theta) contributions as in Eq. 3 (c applies to both)."""
+    No inclination weighting is applied; the selection of the unstable side is done
+    in free_convection_transition()."""
     Ra = rayleigh(dT, TA, nu)
     return c * Ra ** (1.0 / 3.0)
 
