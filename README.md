@@ -79,7 +79,7 @@ Lc^(n-1) = D0^(n-1) · (2/π) · B(1/2, n/2 + 1)        (B = Beta function)
 ```
 
 `characteristic_length(L, W, phi, n)` / `characteristicLength.m` implement it.
-For *n* = 0.75 it reproduces the linear fit of Eq. 9 within 0.2 %.
+For *n* = 0.75 it reproduces the linear fit of Eq. 9 within 0.03 % (L_c/L_Co depends only on *n*, not on φ or the aspect ratio).
 
 ### Extension: laminar forced and mixed convection (flowline concept)
 
@@ -124,7 +124,7 @@ turbulent.
 ### Extension: angle of attack and finite-plate enhancement (parsimonious leaf model)
 
 Five parameters fitted to 815 thin-plate / leaf measurements (Chen 1988, Haseba 1973/84,
-Sparrow 1977/79, Parkhurst 1968, Powell 1940, Schuepp 1992, Ramirez 2002, Kobus 2006;
+Sparrow 1977/79, Parkhurst 1968, Powell 1940, Schuepp 1993, Ramirez 2002, Kobus 2006;
 Re 1e3–1.6e5, angle of attack 0–90°, both faces; rRMSE 24 %, bias −4 %;
 see `docs/validation.md`):
 
