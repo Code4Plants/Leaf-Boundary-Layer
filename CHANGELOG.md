@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- License changed from GPL-3.0-or-later to LGPL-3.0-or-later (`COPYING.LESSER`, with the
+  GNU GPL v3 text in `COPYING`).
+
 ## 1.1.0 (2026-10-12)
 
 - General model `leaf_conductances` / `leafConductances.m`: free (laminar, turbulent

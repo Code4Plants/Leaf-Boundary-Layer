@@ -3,7 +3,7 @@ message: "If you use this software, please cite the paper below and the software
 title: "leaf-conductance: boundary-layer conductance of leaves under free, forced and mixed convection (Python and MATLAB)"
 version: 1.1.0
 date-released: 2026-10-12
-license: GPL-3.0
+license: LGPL-3.0-or-later
 authors:
   - family-names: Graefe
     given-names: Jan

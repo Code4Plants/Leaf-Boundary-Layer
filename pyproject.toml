@@ -7,14 +7,14 @@ name = "leaf-conductance"
 version = "1.1.0"
 description = "Boundary-layer conductance of leaves under free, forced and mixed convection (Graefe et al. 2022 and extensions)"
 readme = "README.md"
-license = {text = "GPL-3.0-or-later"}
+license = {text = "LGPL-3.0-or-later"}
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.22"]
 authors = [{name = "Jan Graefe", email = "graefe@igzev.de"}]
 keywords = ["leaf", "boundary layer", "convection", "Nusselt", "heat transfer", "transpiration"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
   "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 
