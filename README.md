@@ -221,5 +221,6 @@ verified DOIs (`docs/references.bib` for BibTeX); `docs/validation.md` describes
 
 ## License
 
-GPL-3.0 (see LICENSE). Please cite the paper above when using the model
+LGPL-3.0-or-later (GNU Lesser General Public License v3 or later; see `COPYING.LESSER`,
+which supplements the GNU GPL v3 in `COPYING`). Please cite the paper above when using the model
 (`CITATION.cff`).
