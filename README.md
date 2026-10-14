@@ -1,4 +1,4 @@
-# leaf-conductance
+# leaf-boundary-layer
 
 Python and MATLAB implementations of the boundary-layer conductance of leaves under
 free, forced and mixed convection, per leaf side and for heat, water vapour and CO2.
