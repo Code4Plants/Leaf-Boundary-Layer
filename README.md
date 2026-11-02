@@ -9,9 +9,10 @@ The free-convection core is the model of
 > Meteorology* 317, 108884. https://doi.org/10.1016/j.agrformet.2022.108884 (CC BY 4.0)
 
 extended (sections marked *Extension*) by the flowline length for laminar forced
-convection, the laminar-turbulent transition (Lienhard 2020), a parsimonious
-angle-of-attack model fitted to 815 literature measurements, mixed convection and the
-mode-dependent conversion to scalar conductances.
+convection, the laminar-turbulent transition of forced convection (Lienhard 2020), a
+parsimonious angle-of-attack model fitted to 815 literature measurements, mixed
+convection and the mode-dependent conversion to scalar conductances. Free convection
+stays laminar: leaves with ΔT ≤ 10 K do not reach the turbulent onset (see below).
 
 Both implementations share the same formulation and are cross-checked against a
 common set of 573 reference cases (`reference/reference_values.json`, relative
@@ -143,23 +144,24 @@ direction and the leaf orientation. Blunt bodies (Re·t/L ≥ 2000) are outside 
 
 ### General model: heat, water vapour and CO2 conductances per leaf side
 
-`leaf_conductances(...)` / `leafConductances.m` combine everything (free laminar and
-turbulent, forced laminar / transitional / turbulent with the Lienhard transition,
+`leaf_conductances(...)` / `leafConductances.m` combine everything (laminar free
+convection, forced laminar / transitional / turbulent with the Lienhard transition,
 angle of attack, conduction limit) and return per side X ∈ {U, L}: `gb_X` (heat),
 `gv_X` (H2O), `gc_X` (CO2), the effective diffusivity exponent `k_X` and the mode shares
-(`cond_share_X`, `free_share_X`, `free_turb_share_X`, `forced_turb_share_X`).
+(`cond_share_X`, `free_share_X`, `forced_turb_share_X`).
 
 The scalar conductances follow g_s = g_heat (D_s/κ)^k. Each transport mode has its own
 exponent k = 1 − (Pr exponent of its law): conduction 1, laminar free convection 0.75
-(Ra^1/4), turbulent free convection 2/3 (Ra^1/3), forced laminar / transitional 2/3
-(Pr^1/3), forced turbulent 0.4 (Pr^0.6). The effective k of a side is the share-weighted
-mean, generalising Eq. 17 of the paper (laminar free value raised towards 1 by the
-conduction share Nu_c/NuF): k_free = (1 − s_t)[0.75 + 0.25 Nu_c/NuF_lam] + s_t·2/3,
-k_forced = (1 − f_t)·2/3 + f_t·0.4, k = (1 − s_f) k_free + s_f k_forced with the
-power-mean shares s_t (free turbulent), f_t (forced turbulent, additive Lienhard parts)
-and s_f (forced, cubic blending). Diffusivities D_H2O = 2.12e-5, D_CO2 = 1.39e-5 m²/s at
-0 °C scaled with (T/273.15)^1.75 (p0/p). Example (8×4 cm leaf, 60°, +3 K, 20 °C):
-still air k = 0.85, g_heat 3.5 / g_H2O 3.8 / g_CO2 2.7 mm/s; 3 m/s wind k = 0.67.
+(Ra^1/4), forced laminar / transitional 2/3 (Pr^1/3), forced turbulent 0.4 (Pr^0.6). The
+effective k of a side is the share-weighted mean, generalising Eq. 17 of the paper
+(laminar free value raised towards 1 by the conduction share Nu_c/NuF):
+k_free = 0.75 + 0.25 Nu_c/NuF_free, k_forced = (1 − f_t)·2/3 + f_t·0.4,
+k = (1 − s_f) k_free + s_f k_forced with the shares f_t (forced turbulent, additive
+Lienhard parts) and s_f (forced, cubic blending). Diffusivities D_H2O = 2.12e-5,
+D_CO2 = 1.39e-5 m²/s at 0 °C scaled with (T/273.15)^1.75 (p0/p). Example (8×4 cm leaf,
+60°, +3 K, 20 °C): still air k = 0.85, g_heat 3.5 / g_H2O 3.8 / g_CO2 2.7 mm/s;
+3 m/s wind k = 0.67. In still air the general model equals the laminar free-convection
+model of the paper.
 
 ```python
 r = leaf_conductances(TL, TA, u, L, W, alpha_x_deg, wind_from_deg=270, TI_pct=20)
@@ -170,11 +172,19 @@ r["gb_U"], r["gv_U"], r["gc_U"], r["k_U"]
 r = leafConductances(TL, TA, u, L, W, alphaX, 0, 180, 270, [], [], [], 20);
 ```
 
-Free convection: `free_convection_transition()` adds a turbulent branch
-NuF = 0.14 Ra^(1/3) on the buoyantly unstable side (and both sides of a vertical
-leaf), blended with the laminar Graefe model as (NuF_lam^6 + NuF_turb^6)^(1/6); the
-stably stratified side stays laminar. Both extensions are validated against the
-literature data set described in `docs/validation.md`.
+### Free convection stays laminar
+
+Turbulent free convection sets in at Ra_L ≈ 1e7 for upward-facing horizontal plates
+(L = A/P) and at Ra_L ≈ 1e9 for vertical plates. Leaves do not get there: with ΔT ≤ 10 K
+at 20 °C (Ra ≤ 1e9 m⁻³) a leaf of L ≤ 30 cm has Ra_Lh = Ra L_h³ ≤ ~1e5 (horizontal) and
+Ra_Li = Ra L_i³ ≤ ~1.5e7 (vertical), two orders of magnitude below the onset; an 8 × 4 cm
+leaf at 3 K sits at Ra_Lh ≈ 7e2. Only metre-sized leaves at ΔT ≈ 10 K approach the onset.
+The laminar model of Graefe et al. (2022), which meets the two-sided plate data of
+Ryms et al. (2025) within 4 % (CFD), therefore covers the leaf range and the software has
+no turbulent branch of free convection. (The optional 0.14 Ra^(1/3) branch of versions
+1.1.x had no Rayleigh onset and raised the upper side of horizontal leaves by up to 30 %
+within the laminar range; it was removed in 1.2.0.) The forced extensions are validated
+against the literature data set described in `docs/validation.md`.
 
 ## Python
 
@@ -202,13 +212,13 @@ Inputs are elementwise over arrays of leaf/air temperatures; the geometry is sca
 ## Files
 
 ```
-python/graefe_convection.py        model (single file, numpy): free, forced, mixed convection, transition, angle of attack, scalar conductances
+python/graefe_convection.py        model (single file, numpy): free, forced, mixed convection, forced transition, angle of attack, scalar conductances
 python/test_graefe_convection.py   pytest suite
 python/make_reference.py           writes reference/reference_values.json
 matlab/graefeFreeConvection.m      free convection (paper)
 matlab/graefeMixedConvection.m     forced + mixed convection extension
 matlab/leafConductances.m          general model: heat / H2O / CO2 per side with mode-dependent exponents
-matlab/forcedNusseltLienhard.m, forcedNusseltLeaf.m, angleOfAttackFactors.m, windAttackAngle.m, freeConvectionTransition.m
+matlab/forcedNusseltLienhard.m, forcedNusseltLeaf.m, angleOfAttackFactors.m, windAttackAngle.m
 matlab/leafGeometry.m, airProperties.m, characteristicLength.m, windStreamlineAngle.m
 matlab/tests/testGraefeFreeConvection.m, matlab/runTests.m, matlab/exampleFig6.m
 reference/reference_values.json    cross-check cases (free + mixed)

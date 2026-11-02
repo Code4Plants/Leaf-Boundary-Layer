@@ -54,7 +54,7 @@ for ax, ay, az in ((0.0, 0.0, 180.0), (60.0, 0.0, 180.0), (60.0, 45.0, 90.0), (9
                           "forced_regime": str(m["forced_regime"]), "NuF_forced_U": float(m["NuF_forced_U"]),
                           "NuF_forced_L": float(m["NuF_forced_L"]), "gb_U": float(m["gb_U"]), "gb_L": float(m["gb_L"]),
                           "H_U": float(m["H_U"]), "H_L": float(m["H_L"])})
-# scalar conductance cases (general model: free transition, forced transition, angle model)
+# scalar conductance cases (general model: laminar free convection, forced transition, angle model)
 scalar = []
 for dT in (-6.0, 3.0, 12.0):
     for u, ti in ((0.0, 1.0), (0.4, 5.0), (2.5, 20.0), (12.0, 40.0)):
@@ -63,7 +63,7 @@ for dT in (-6.0, 3.0, 12.0):
                 r = leaf_conductances(293.15 + dT, 293.15, u, L, W, ax, 0.0, 180.0, wind_from_deg=wd, TI_pct=ti)
                 scalar.append({"dT": dT, "u": u, "TI": ti, "alpha_x": ax, "wind_from": wd, "L": L, "W": W,
                                **{k: float(r[k]) for k in ("gb_U", "gb_L", "gv_U", "gv_L", "gc_U", "gc_L", "k_U", "k_L",
-                                                            "cond_share_U", "free_share_U", "free_turb_share_U", "forced_turb_share_U")}})
+                                                            "cond_share_U", "free_share_U", "forced_turb_share_U")}})
 out = Path(__file__).resolve().parent.parent / "reference" / "reference_values.json"
 out.parent.mkdir(exist_ok=True)
 out.write_text(json.dumps({"source": "python/graefe_convection.py", "cases": cases, "mixed_cases": mixed, "angle_cases": angle,

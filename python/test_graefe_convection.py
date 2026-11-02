@@ -159,7 +159,7 @@ def test_forced_and_mixed():
 
 
 def test_lienhard_transition():
-    from graefe_convection import forced_nusselt_lienhard, forced_regime, transition_onset_reynolds, free_convection_transition
+    from graefe_convection import forced_nusselt_lienhard, forced_regime, transition_onset_reynolds
     # onset: smooth stream capped at 5e5, 5 % turbulence ~ 4.8e4, floor 2e3
     assert transition_onset_reynolds(0.1) == 5e5
     assert abs(transition_onset_reynolds(5.0) / 4.8e4 - 1) < 0.05
@@ -188,13 +188,6 @@ def test_lienhard_transition():
     # mixed convection with transition: regime reported and conductance grows with u
     m = mixed_convection(293.15 + 3, 293.15, np.array([0.5, 5.0, 20.0]), 0.08, 0.04, 60.0, wind_from_deg=270.0, transition=True, TI_pct=10.0)
     assert np.all(np.diff(m["gb_U"]) > 0) and m["forced_regime"][0] == "laminar"
-    # free-convection transition: identical at low Ra, larger at very high Ra on the unstable side
-    small = free_convection_transition(293.15 + 1, 293.15, 0.08, 0.04, 0.0)
-    base = free_convection(293.15 + 1, 293.15, 0.08, 0.04, 0.0)
-    assert abs(small["gb_U"] / base["gb_U"] - 1) < 0.02
-    big = free_convection_transition(293.15 + 40, 293.15, 1.5, 1.5, 0.0)
-    base_big = free_convection(293.15 + 40, 293.15, 1.5, 1.5, 0.0)
-    assert big["gb_U"] > 1.3 * base_big["gb_U"] and abs(big["gb_L"] - base_big["gb_L"]) < 1e-12
 
 
 def test_angle_of_attack_model():
@@ -242,13 +235,18 @@ def test_scalar_conductances():
     D_v, D_c = scalar_diffusivities(293.15)
     assert abs(D_v / D_c - 2.12 / 1.39) < 1e-12 and 2.3e-5 < D_v < 2.5e-5
     # pure modes
-    assert abs(scalar_exponent(0.0, 1.0, 0.0, 0.0, 0.0) - K_FREE_LAM) < 1e-12
-    assert abs(scalar_exponent(1.0, 1.0, 0.0, 0.0, 0.0) - K_COND) < 1e-12
-    assert abs(scalar_exponent(0.0, 1.0, 0.0, 0.0, 1.0) - K_FORCED_LAM) < 1e-12
-    assert abs(scalar_exponent(0.0, 1.0, 0.0, 1.0, 1.0) - K_FORCED_TURB) < 1e-12
+    assert abs(scalar_exponent(0.0, 1.0, 0.0, 0.0) - K_FREE_LAM) < 1e-12
+    assert abs(scalar_exponent(1.0, 1.0, 0.0, 0.0) - K_COND) < 1e-12
+    assert abs(scalar_exponent(0.0, 1.0, 0.0, 1.0) - K_FORCED_LAM) < 1e-12
+    assert abs(scalar_exponent(0.0, 1.0, 1.0, 1.0) - K_FORCED_TURB) < 1e-12
     TA = 293.15
     still = leaf_conductances(TA + 3, TA, 0.0, 0.08, 0.04, 60.0, wind_from_deg=180.0)
     assert K_FREE_LAM < float(still["k_U"]) < K_COND and float(still["cond_share_U"]) > 0.2
+    # still air: the general model is the laminar free-convection model (no turbulent free branch)
+    lam = free_convection(TA + 3, TA, 0.08, 0.04, 60.0)
+    assert abs(float(still["gb_U"]) / float(lam["gb_U"]) - 1) < 1e-12
+    big_still = leaf_conductances(TA + 10, TA, 0.0, 0.3, 0.15, 0.0, wind_from_deg=90.0)
+    assert abs(float(big_still["gb_U"]) / float(free_convection(TA + 10, TA, 0.3, 0.15, 0.0)["gb_U"]) - 1) < 1e-12
     assert float(still["gv_U"]) > float(still["gb_U"]) > float(still["gc_U"])       # D_H2O > kappa > D_CO2
     assert abs(float(still["gv_U"]) / float(still["gb_U"]) - (still["D_H2O"] / still["kappa"]) ** float(still["k_U"])) < 1e-12
     windy = leaf_conductances(TA + 3, TA, 3.0, 0.08, 0.04, 60.0, wind_from_deg=180.0, TI_pct=1.0)
@@ -256,9 +254,6 @@ def test_scalar_conductances():
     # large leaf, strong turbulent wind: turbulent share pushes k towards 0.4
     big = leaf_conductances(TA + 3, TA, 15.0, 0.6, 0.3, 0.0, wind_from_deg=90.0, TI_pct=40.0)
     assert float(big["forced_turb_share_U"]) > 0.3 and float(big["k_U"]) < K_FORCED_LAM
-    # hot large leaf in still air: free turbulent share > 0 lowers k below the laminar value
-    hot = leaf_conductances(TA + 15, TA, 0.0, 0.6, 0.3, 0.0, wind_from_deg=90.0)
-    assert float(hot["free_turb_share_U"]) > 0.3 and float(hot["k_U"]) < float(still["k_U"])
     # vectorised wind speeds, sides independent
     vec = leaf_conductances(TA + 3, TA, np.array([0.0, 1.0, 5.0]), 0.08, 0.04, 60.0, wind_from_deg=180.0)
     assert vec["gv_U"].shape == (3,) and np.all(np.diff(vec["gc_L"]) > 0)
@@ -271,7 +266,7 @@ def test_reference_values_scalar():
         r = leaf_conductances(293.15 + c["dT"], 293.15, c["u"], c["L"], c["W"], c["alpha_x"], 0.0, 180.0,
                               wind_from_deg=c["wind_from"], TI_pct=c["TI"])
         for key in ("gb_U", "gb_L", "gv_U", "gv_L", "gc_U", "gc_L", "k_U", "k_L", "cond_share_U", "free_share_U",
-                    "free_turb_share_U", "forced_turb_share_U"):
+                    "forced_turb_share_U"):
             assert abs(float(r[key]) - c[key]) <= 1e-9 * max(1.0, abs(c[key])), key
 
 
@@ -292,3 +287,23 @@ def test_reference_values():
         for key in ("gb_U", "gb_L", "H_U", "H_L", "NuF_U", "NuF_L", "Nuc", "Ra"):
             assert abs(float(r[key]) - c[key]) <= 1e-9 * max(1.0, abs(c[key])), key
         assert abs(r["geometry"].Li - c["Li"]) < 1e-12
+
+
+def test_ryms2025_two_sided_plate():
+    """Laminar core against the CFD of Ryms, Tesch & Lewandowski (2025): horizontal
+    150 x 75 mm plate heated on both sides, Nu_b = C Ra_b^0.2 with b = 75 mm (Eqs. 41/42:
+    C_U = 0.601, C_L = 0.812; Ra_b 1e5-1.6e6), evaluated for dT <= 10 K (leaf range).
+    Equal-area ellipse of aspect ratio 2; the upper side of a plate heated on both sides is
+    the weaker one (see docs/validation.md)."""
+    b = 0.075
+    L = math.sqrt(4.0 * b * 0.150 * 2.0 / math.pi); W = 0.5 * L
+    TA = 293.15
+    for dT in (3.0, 6.0, 10.0):
+        r = free_convection(TA + dT, TA, L, W, 0.0)
+        Ra_b = float(r["Ra"]) * b ** 3
+        assert 1e5 < Ra_b < 1.6e6
+        C_U = float(r["NuF_U"]) * b / Ra_b ** 0.2
+        C_L = float(r["NuF_L"]) * b / Ra_b ** 0.2
+        assert abs(C_U / 0.601 - 1.0) < 0.10, C_U
+        assert abs(C_L / 0.812 - 1.0) < 0.10, C_L
+        assert float(r["NuF_U"]) < float(r["NuF_L"])

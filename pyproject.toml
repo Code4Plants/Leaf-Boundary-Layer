@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "leaf-conductance"
-version = "1.1.0"
+version = "1.2.0"
 description = "Boundary-layer conductance of leaves under free, forced and mixed convection (Graefe et al. 2022 and extensions)"
 readme = "README.md"
 license = {text = "LGPL-2.1-or-later"}

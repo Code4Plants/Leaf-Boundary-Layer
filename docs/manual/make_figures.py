@@ -239,7 +239,7 @@ for c in ref["scalar_cases"]:
     r = gc.leaf_conductances(293.15 + c["dT"], 293.15, c["u"], c["L"], c["W"], c["alpha_x"], 0.0, 180.0,
                              wind_from_deg=c["wind_from"], TI_pct=c["TI"])
     for k in ("gb_U", "gb_L", "gv_U", "gv_L", "gc_U", "gc_L", "k_U", "k_L", "cond_share_U", "free_share_U",
-              "free_turb_share_U", "forced_turb_share_U"):
+              "forced_turb_share_U"):
         d = max(d, abs(float(r[k]) - c[k]) / max(1.0, abs(c[k])))
 dev["scalar"] = d
 for k, v in dev.items():

@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the paper below and the software."
 title: "leaf-conductance: boundary-layer conductance of leaves under free, forced and mixed convection (Python and MATLAB)"
-version: 1.1.0
-date-released: 2026-10-12
+version: 1.2.0
+date-released: 2026-11-02
 license: LGPL-2.1-or-later
 authors:
   - family-names: Graefe
