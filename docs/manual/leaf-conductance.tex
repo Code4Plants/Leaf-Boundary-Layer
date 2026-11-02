@@ -458,7 +458,7 @@ Python test & MATLAB test & Verified property\\
 \code{forced\_and\_mixed} & \code{mixedConvection} & laminar law identity; $u = 0$ reproduces free convection; strong wind: forced share $>0.9$; cubic blending inequality; $L_f$ along $>$ unknown $>$ across; monotone in $u$\\
 \code{lienhard\_transition} & \code{lienhardTransition} & onset bounds and value at TI = 5\,\%; laminar below onset; between laminar and fully turbulent above; continuity and monotonicity on 400 points; TI and uniform-flux effects; reported regimes; MATLAB: three values against Python\\
 \code{angle\_of\_attack\_model} & \code{angleOfAttackModel} & factors 1 in parallel flow; $g_W(90^\circ) = 1+a_W$; leeward peak $>1.15$ at 10--35$^\circ$, $<1$ at $90^\circ$; $f_e$ scaling; $\beta$ and windward side for horizontal, vertical and inclined leaves; windward side stronger at $60^\circ$\\
-\code{ryms2025\_two\_sided\_plate} & \code{ryms2025TwoSidedPlate} & horizontal $150	imes75$\,mm plate heated on both sides \citep{ryms2025}: laminar $C_U$, $C_L$ within 10\,\% of the two-sided CFD (0.601, 0.812); upper side weaker\
+\code{ryms2025\_two\_sided\_plate} & \code{ryms2025TwoSidedPlate} & horizontal $150\times75$\,mm plate heated on both sides \citep{ryms2025}: laminar $C_U$, $C_L$ within 10\,\% of the two-sided CFD (0.601, 0.812); upper side weaker\\
 \code{scalar\_conductances} & \code{scalarConductances} & $D_{\mathrm{H_2O}}/D_{\mathrm{CO_2}}$; pure-mode exponents $1$, $3/4$, $2/3$, $0.4$; $g_v>g_b>g_c$; $k\to2/3$ in laminar wind; turbulent forced share lowers $k$; still air equals the laminar free-convection model; vectorisation\\
 \code{reference\_values} & \code{matchesPython\allowbreak Reference} & \NRefCases\ free-convection reference cases (rel.\ tol.\ $10^{-9}$)\\
 \code{reference\_values\_mixed} & \code{matchesPython\allowbreak ReferenceMixed} & \NRefmixedCases\ mixed-convection cases\\
@@ -619,7 +619,7 @@ Source & Use & Status\\
 \citet{campbell1998} & alternative laminar coefficient 0.6 & V\\
 \citet{monteith1973} & simple empirical $g_b$ (\code{monteith\_gb}) & –\\
 \citet{hassani1989} & free convection of disks and squares (validation) & V\\
-\citet{kobus2001,kobus2002} & free convection of horizontal and inclined disks (validation) & V\
+\citet{kobus2001,kobus2002} & free convection of horizontal and inclined disks (validation) & V\\
 \citet{ryms2025} & free convection of a horizontal plate heated on both sides, experiment and CFD per side (validation; laminar range of leaves) & V\\
 \citet{kobus1996} & mixed convection, candidate data (not used) & V\\
 \citet{chen1988a} & forced, parallel flow, TI 3--22\,\%, two-sided & V\\
