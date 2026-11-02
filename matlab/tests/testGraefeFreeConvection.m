@@ -76,6 +76,22 @@ classdef testGraefeFreeConvection < matlab.unittest.TestCase
             end
         end
 
+        function ryms2025TwoSidedPlate(tc)
+            % laminar core against the CFD of Ryms, Tesch & Lewandowski (2025): horizontal
+            % 150 x 75 mm plate heated on both sides, Nu_b = C Ra_b^0.2 with b = 75 mm
+            % (Eqs. 41/42: C_U = 0.601, C_L = 0.812); equal-area ellipse of aspect ratio 2,
+            % dT <= 10 K (leaf range)
+            b = 0.075; L = sqrt(4 * b * 0.150 * 2 / pi); W = L / 2; TA = 293.15;
+            for dT = [3 6 10]
+                r = graefeFreeConvection(TA + dT, TA, L, W, 0);
+                Rab = r.Ra * b^3;
+                tc.verifyGreaterThan(Rab, 1e5); tc.verifyLessThan(Rab, 1.6e6);
+                tc.verifyEqual(r.NuF_U * b / Rab^0.2, 0.601, 'RelTol', 0.10);
+                tc.verifyEqual(r.NuF_L * b / Rab^0.2, 0.812, 'RelTol', 0.10);
+                tc.verifyLessThan(r.NuF_U, r.NuF_L);
+            end
+        end
+
         function vectorisedAndEq18(tc)
             TA = 293.15; dT = [-5 -1 1 5];
             r = graefeFreeConvection(TA + dT, TA, 0.08, 0.04, 60);
@@ -197,8 +213,12 @@ classdef testGraefeFreeConvection < matlab.unittest.TestCase
             tc.verifyEqual(windy.k_U, 2/3, 'AbsTol', 0.01);
             big = leafConductances(TA + 3, TA, 15, 0.6, 0.3, 0, 0, 180, 90, [], [], [], 40);
             tc.verifyGreaterThan(big.forced_turb_share_U, 0.3); tc.verifyLessThan(big.k_U, 2/3);
-            hot = leafConductances(TA + 15, TA, 0, 0.6, 0.3, 0, 0, 180, 90);
-            tc.verifyGreaterThan(hot.free_turb_share_U, 0.3);
+            % still air: the general model equals the laminar free-convection model
+            lam = graefeFreeConvection(TA + 3, TA, 0.08, 0.04, 60);
+            tc.verifyEqual(still.gb_U, lam.gb_U, 'RelTol', 1e-12);
+            bigStill = leafConductances(TA + 10, TA, 0, 0.3, 0.15, 0, 0, 180, 90);
+            lamBig = graefeFreeConvection(TA + 10, TA, 0.3, 0.15, 0);
+            tc.verifyEqual(bigStill.gb_U, lamBig.gb_U, 'RelTol', 1e-12);
         end
 
         function matchesPythonReferenceScalar(tc)
@@ -209,7 +229,7 @@ classdef testGraefeFreeConvection < matlab.unittest.TestCase
             for i = 1:numel(cases)
                 c = cases{i};
                 r = leafConductances(293.15 + c.dT, 293.15, c.u, c.L, c.W, c.alpha_x, 0, 180, c.wind_from, [], [], [], c.TI);
-                for key = {'gb_U', 'gb_L', 'gv_U', 'gv_L', 'gc_U', 'gc_L', 'k_U', 'k_L', 'cond_share_U', 'free_share_U', 'free_turb_share_U', 'forced_turb_share_U'}
+                for key = {'gb_U', 'gb_L', 'gv_U', 'gv_L', 'gc_U', 'gc_L', 'k_U', 'k_L', 'cond_share_U', 'free_share_U', 'forced_turb_share_U'}
                     tc.verifyEqual(r.(key{1}), c.(key{1}), 'RelTol', 1e-9, 'AbsTol', 1e-12, sprintf('scalar case %d field %s', i, key{1}));
                 end
             end

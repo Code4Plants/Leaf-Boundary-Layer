@@ -33,7 +33,7 @@ import math
 
 import numpy as np
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # Table 3 (Graefe et al. 2022)
 P1, P2, P3, P4, P5, P6 = 6.0, 1.42, 0.513, 0.4, 0.202, 0.492
@@ -222,47 +222,10 @@ def nusselt_free(dT, TA, nu, geom: LeafGeometry):
     return blend(iu, hu), blend(il, hl), nuc, Ra
 
 
-C_FREE_TURB = 0.14      # turbulent free convection Nu_L = 0.14 Ra_L^(1/3) (upper side / vertical, Ra > ~1e7)
-M_FREE_TURB = 6.0       # blending exponent laminar/turbulent free convection
-
-
-def nusselt_free_turbulent(dT, TA, nu, geom: LeafGeometry, c=C_FREE_TURB):
-    """Turbulent free-convection flux-proportional Nusselt number (m-1) for the side
-    facing the buoyant flow (upper side of a heated or lower side of a cooled leaf,
-    and vertical leaves): NuF = c Ra^(1/3), independent of the leaf size.  The
-    stably stratified side (lower side of a heated leaf) keeps its laminar value.
-    No inclination weighting is applied; the selection of the unstable side is done
-    in free_convection_transition()."""
-    Ra = rayleigh(dT, TA, nu)
-    return c * Ra ** (1.0 / 3.0)
-
-
-def free_convection_transition(TL, TA, L, W, alpha_x_deg, alpha_y_deg=0.0, p=101325.0, eL=None, eA=None,
-                               c_turb=C_FREE_TURB, m=M_FREE_TURB):
-    """free_convection() with a laminar-turbulent transition of the free convection:
-    on the buoyantly unstable side NuF = (NuF_lam^m + NuF_turb^m)^(1/m) with
-    NuF_turb = c_turb Ra^(1/3); the stable side stays laminar.  Extension, not part of
-    Graefe et al. (2022)."""
-    r = free_convection(TL, TA, L, W, alpha_x_deg, alpha_y_deg, p, eL, eA)
-    g = r["geometry"]
-    turb = nusselt_free_turbulent(r["dT"], TA, r["nu"], g, c_turb)
-    heated = np.asarray(r["dT"]) >= 0
-    vertical = abs(math.sin(g.theta) - 1.0) < 1e-9
-    unstable_u = heated | vertical           # upper side buoyantly unstable (heated) or vertical
-    unstable_l = (~heated) | vertical
-    nf_u = np.where(unstable_u, (r["NuF_U"] ** m + turb ** m) ** (1.0 / m), r["NuF_U"])
-    nf_l = np.where(unstable_l, (r["NuF_L"] ** m + turb ** m) ** (1.0 / m), r["NuF_L"])
-    r["NuF_lam_U"], r["NuF_lam_L"] = r["NuF_U"], r["NuF_L"]
-    r["NuF_turb"] = turb
-    # turbulent share of the free convection per side (power-mean partition)
-    r["free_turb_share_U"] = np.where(unstable_u, turb ** m / (r["NuF_U"] ** m + turb ** m), 0.0)
-    r["free_turb_share_L"] = np.where(unstable_l, turb ** m / (r["NuF_L"] ** m + turb ** m), 0.0)
-    r["NuF_U"], r["NuF_L"] = nf_u, nf_l
-    r["gb_U"], r["gb_L"] = r["kappa"] * nf_u, r["kappa"] * nf_l
-    TLa = np.asarray(TL, dtype=float); TAa = np.asarray(TA, dtype=float)
-    r["H_U"] = r["rho"] * CP_AIR * r["gb_U"] * (TLa - TAa)
-    r["H_L"] = r["rho"] * CP_AIR * r["gb_L"] * (TLa - TAa)
-    return r
+# No turbulent branch of free convection: with dT <= 10 K and leaf dimensions up to
+# ~0.3 m the Rayleigh numbers stay far below the laminar-turbulent onset (Ra_Lh <~ 1e5
+# against ~1e7 for upward-facing horizontal plates, Ra_Li <~ 2e7 against ~1e9 for
+# vertical plates), so the laminar model of Graefe et al. (2022) covers the leaf range.
 
 
 def free_convection(TL, TA, L, W, alpha_x_deg, alpha_y_deg=0.0, p=101325.0, eL=None, eA=None):
@@ -467,7 +430,7 @@ def nusselt_forced(u, nu, Lf, c=C_FORCED, transition=False, TI_pct=1.0, bc="isot
 
 def mixed_convection(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg=0.0, leaf_azimuth_deg=180.0, wind_from_deg=None,
                      p=101325.0, eL=None, eA=None, c_forced=C_FORCED, transition=False, TI_pct=1.0, bc="isothermal",
-                     angle_model=False, free_transition=False):
+                     angle_model=False):
     """Mixed free/forced convection of both leaf sides.
 
     Free convection follows Graefe et al. (2022); forced convection is the laminar
@@ -484,12 +447,7 @@ def mixed_convection(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg=0.0, leaf_azimuth
     when the direction is unknown).  Returns the dict of free_convection() extended by
     NuF_forced, gb_forced, Lf, phi_w (rad), NuF_mix_U/L, gb_U/gb_L (mixed), H_U/H_L
     (mixed), forced_share and gb_free_U/L."""
-    if free_transition:
-        free = free_convection_transition(TL, TA, L, W, alpha_x_deg, alpha_y_deg, p, eL, eA)
-    else:
-        free = free_convection(TL, TA, L, W, alpha_x_deg, alpha_y_deg, p, eL, eA)
-        free["NuF_lam_U"], free["NuF_lam_L"] = free["NuF_U"], free["NuF_L"]
-        free["free_turb_share_U"] = free["free_turb_share_L"] = 0.0
+    free = free_convection(TL, TA, L, W, alpha_x_deg, alpha_y_deg, p, eL, eA)
     if wind_from_deg is None:
         # orientation-averaged chord length (Eq. 5) when the wind direction is unknown
         g = free["geometry"]
@@ -538,7 +496,7 @@ def mixed_convection(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg=0.0, leaf_azimuth
 
 # ----------------------------------------------------- scalars: heat, H2O, CO2
 # diffusivity exponent k of each transport mode: g_s = g_heat (D_s / kappa)^k, k = 1 - (Pr exponent)
-K_COND, K_FREE_LAM, K_FREE_TURB, K_FORCED_LAM, K_FORCED_TURB = 1.0, 0.75, 2.0 / 3.0, 2.0 / 3.0, 0.4
+K_COND, K_FREE_LAM, K_FORCED_LAM, K_FORCED_TURB = 1.0, 0.75, 2.0 / 3.0, 0.4
 D_H2O_0, D_CO2_0 = 2.12e-5, 1.39e-5    # m2/s at 273.15 K, 101325 Pa (Massman 1998)
 
 
@@ -549,31 +507,31 @@ def scalar_diffusivities(T, p=101325.0):
     return D_H2O_0 * f, D_CO2_0 * f
 
 
-def scalar_exponent(nuc, nuf_free_lam, free_turb_share, forced_turb_share, forced_share):
+def scalar_exponent(nuc, nuf_free, forced_turb_share, forced_share):
     """Effective diffusivity exponent of one leaf side from the shares of the transport
     modes (generalisation of Eq. 17 of Graefe et al. 2022):
     laminar free convection k = 0.75 interpolated to 1 by the conduction share
-    Nuc/NuF_lam, turbulent free convection 2/3, forced laminar/transitional 2/3,
-    forced turbulent 0.4; weighted by the turbulent shares and the forced share."""
-    s_c = np.clip(np.asarray(nuc) / np.maximum(np.asarray(nuf_free_lam), np.asarray(nuc)), 0.0, 1.0)
-    k_free_lam = K_FREE_LAM + (K_COND - K_FREE_LAM) * s_c                  # Eq. 17
-    k_free = (1.0 - free_turb_share) * k_free_lam + free_turb_share * K_FREE_TURB
+    Nuc/NuF_free, forced laminar/transitional 2/3, forced turbulent 0.4; weighted by
+    the forced turbulent share and the forced share."""
+    s_c = np.clip(np.asarray(nuc) / np.maximum(np.asarray(nuf_free), np.asarray(nuc)), 0.0, 1.0)
+    k_free = K_FREE_LAM + (K_COND - K_FREE_LAM) * s_c                      # Eq. 17
     k_forced = (1.0 - forced_turb_share) * K_FORCED_LAM + forced_turb_share * K_FORCED_TURB
     return (1.0 - forced_share) * k_free + forced_share * k_forced
 
 
 def leaf_conductances(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg=0.0, leaf_azimuth_deg=180.0, wind_from_deg=None,
                       p=101325.0, eL=None, eA=None, TI_pct=1.0, bc="isothermal", transition=True,
-                      free_transition=True, angle_model=True):
+                      angle_model=True):
     """General convection model: boundary-layer conductances (m s-1) of both leaf sides
-    for heat, water vapour and CO2 with free (laminar/turbulent), forced
-    (laminar/transitional/turbulent) convection, angle of attack and conduction limit.
+    for heat, water vapour and CO2 with laminar free convection (Graefe et al. 2022),
+    forced (laminar/transitional/turbulent) convection, angle of attack and conduction
+    limit.
 
     Returns a dict with, per side X in (U, L): gb_X (heat), gv_X (H2O), gc_X (CO2),
     k_X (effective diffusivity exponent), shares cond_share_X, free_share_X,
-    free_turb_share_X, forced_turb_share_X, plus the fields of mixed_convection()."""
+    forced_turb_share_X, plus the fields of mixed_convection()."""
     out = mixed_convection(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg, leaf_azimuth_deg, wind_from_deg, p, eL, eA,
-                           transition=transition, TI_pct=TI_pct, bc=bc, angle_model=angle_model, free_transition=free_transition)
+                           transition=transition, TI_pct=TI_pct, bc=bc, angle_model=angle_model)
     nuc = out["Nuc"]
     # forced: turbulent share of the Lienhard average (additive parts)
     if transition:
@@ -585,18 +543,15 @@ def leaf_conductances(TL, TA, u, L, W, alpha_x_deg, alpha_y_deg=0.0, leaf_azimut
     TF = out["TF"]
     D_v, D_c = scalar_diffusivities(TF, p)
     for side in ("U", "L"):
-        nf_free_lam = out.get(f"NuF_lam_{side}", out[f"NuF_free_{side}"] if f"NuF_free_{side}" in out else out[f"gb_free_{side}"] / out["kappa"])
-        free_turb_share = out.get(f"free_turb_share_{side}", 0.0)
         nf_free = out[f"gb_free_{side}"] / out["kappa"]
         nf_forced = out[f"NuF_forced_{side}"]
         forced_share = nf_forced ** 3 / (nf_free ** 3 + nf_forced ** 3)
-        k = scalar_exponent(nuc, nf_free_lam, free_turb_share, f_turb, forced_share)
+        k = scalar_exponent(nuc, nf_free, f_turb, forced_share)
         out[f"k_{side}"] = k
         out[f"gv_{side}"] = out[f"gb_{side}"] * (D_v / out["kappa"]) ** k
         out[f"gc_{side}"] = out[f"gb_{side}"] * (D_c / out["kappa"]) ** k
-        out[f"cond_share_{side}"] = np.clip(nuc / np.maximum(nf_free_lam, nuc), 0.0, 1.0)
+        out[f"cond_share_{side}"] = np.clip(nuc / np.maximum(nf_free, nuc), 0.0, 1.0)
         out[f"free_share_{side}"] = 1.0 - forced_share
-        out[f"free_turb_share_{side}"] = free_turb_share
         out[f"forced_turb_share_{side}"] = f_turb
     out["D_H2O"], out["D_CO2"] = D_v, D_c
     return out

@@ -37,7 +37,7 @@
 \normalsize Model description, verification and validation\\[2pt]
 \normalsize Software version \PkgVersion\ (Python and MATLAB)}
 \author{Jan Graefe\\ \small Leibniz Institute of Vegetable and Ornamental Crops (IGZ), Gro\ss beeren, Germany}
-\date{13 October 2026}
+\date{2 November 2026}
 
 \begin{document}
 \maketitle
@@ -48,10 +48,9 @@
 (ii)~laminar forced convection along the wind streamlines projected onto the leaf plane (flowline concept),
 (iii)~the laminar--transitional--turbulent flat-plate correlation of \citet{lienhard2020} with a turbulence-dependent transition onset \citep{mayle1991},
 (iv)~a five-parameter angle-of-attack model for the windward and leeward leaf side fitted to 815 literature measurements,
-(v)~a turbulent branch of free convection,
-(vi)~mixed convection by power-mean blending and
-(vii)~mode-dependent conversion of the heat conductance to scalar conductances.
-This document states every equation as implemented, the conventions of the two implementations, the test cases that verify them and the validation evidence, and it identifies the limits of validity. The Python and MATLAB implementations pass all 17 + 17 unit tests and agree on \NRefTotal\ shared reference cases to within $\ensuremath{1\times10^{-15}}$ relative deviation.
+(v)~mixed convection by power-mean blending and
+(vi)~mode-dependent conversion of the heat conductance to scalar conductances.
+This document states every equation as implemented, the conventions of the two implementations, the test cases that verify them and the validation evidence, and it identifies the limits of validity. The Python and MATLAB implementations pass all 18 + 18 unit tests and agree on \NRefTotal\ shared reference cases to within $\ensuremath{1\times10^{-15}}$ relative deviation.
 \end{abstract}
 
 \tableofcontents
@@ -74,7 +73,6 @@ Component & Source & Section \\
 Geometry, characteristic lengths $L_h$, $L_i$ & \citet{graefe2022}, Eqs.~4--11, App.~A/B & \ref{sec:geometry} \\
 Closed form of the flux-weighted length & extension (exact solution of \Gtt{4}) & \ref{sec:exactlength} \\
 Laminar free convection, both sides & \citet{graefe2022}, Eqs.~1, 3a--3g, 14, 18, Table~3 & \ref{sec:free} \\
-Turbulent free convection & extension & \ref{sec:freeturb} \\
 Forced convection, flowline length & extension & \ref{sec:forced} \\
 Laminar--turbulent transition & \citet{lienhard2020}, \citet{mayle1991}, \citet{kottke1977} & \ref{sec:lienhard} \\
 Angle of attack, finite-plate factor & extension, fitted to literature data & \ref{sec:angle} \\
@@ -226,13 +224,8 @@ so that a transpiring leaf slightly cooler than the air may still drive upward c
 \caption{Laminar free convection of an $8\times4$\,cm leaf at $T_A = 20\,\ensuremath{^\circ}C$. (a) Sensible heat flux of both sides over the inclination $\alpha_x$ ($\alpha_y = 0$), cf.\ Fig.~6b of \citet{graefe2022}: the sides converge with increasing inclination and are identical for the vertical leaf. (b) Conductance per side over the temperature difference.}\label{fig:free}
 \end{figure}
 
-\subsection{Extension: turbulent free convection}\label{sec:freeturb}
-For large or hot leaves the buoyant boundary layer on the unstable side becomes turbulent, where the heat transfer becomes independent of the length scale. \code{free\_convection\_transition} / \code{freeConvectionTransition.m} add
-\begin{equation}
-\mathit{Nu}_{F,\mathrm{turb}} = 0.14\,\Ra^{1/3},\qquad
-\NuF = \big(\mathit{Nu}_{F,\mathrm{lam}}^{\,6} + \mathit{Nu}_{F,\mathrm{turb}}^{\,6}\big)^{1/6}
-\end{equation}
-on the buoyantly unstable side (upper side of a heated, lower side of a cooled leaf, both sides of a vertical leaf). The stably stratified side keeps its laminar value. The turbulent share $s_t = \mathit{Nu}_{F,\mathrm{turb}}^6/(\mathit{Nu}_{F,\mathrm{lam}}^6+\mathit{Nu}_{F,\mathrm{turb}}^6)$ is reported for the scalar exponent (Section~\ref{sec:scalar}). For leaf-sized objects $s_t$ is negligible (e.g.\ $<2\,\%$ change for an $8\times4$\,cm leaf at $\Delta T = 1$\,K); the branch matters for leaves of decimetre size and $\Delta T\gtrsim 10$\,K.
+\subsection{Laminar range: no turbulent branch}\label{sec:freerange}
+Free convection becomes turbulent at $\Ra_L\approx10^7$ for upward-facing horizontal plates ($L = A/P$) and at $\Ra_L\approx10^9$ for vertical plates ($L$ = height). Leaves do not reach these values: with $\Delta T\le10$\,K at 20\,\ensuremath{^\circ}C, $\Ra\le10^{9}$\,m$^{-3}$, so a leaf of length $L\le0.3$\,m has $\Ra_{L_h} = \Ra\,L_h^3\lesssim1.1\times10^{5}$ (horizontal; $L_h\approx0.16L$ for $AR = 2$) and $\Ra_{L_i} = \Ra\,L_i^3\lesssim1.5\times10^{7}$ (vertical; $L_i = 0.816L$), i.e.\ two orders of magnitude below the respective onset; an $8\times4$\,cm leaf at 3\,K lies at $\Ra_{L_h}\approx7\times10^{2}$ and $\Ra_{L_i}\approx9\times10^{4}$. Only metre-sized leaves at $\Delta T\approx10$\,K approach the onset ($2\times0.5$\,m: $\Ra_{L_h}\approx6\times10^{6}$, $\Ra_{L_i}\approx4\times10^{9}$). The laminar model of \citet{graefe2022} therefore covers the leaf range and the software contains no turbulent branch of free convection. (Versions 1.1.x carried an optional $0.14\,\Ra^{1/3}$ branch without a Rayleigh onset; because its single-sided coefficient exceeded the two-sided upper-side term $0.202\,\Ra_{L_h}^{1/4}$ already at $\Ra_{L_h}\approx80$, it raised the upper-side conductance of horizontal leaves by up to 30\,\% within the laminar range and contradicted the two-sided plate data of \citet{ryms2025}; it was removed in version 1.2.0.)
 
 %=====================================================================
 \section{Forced convection}\label{sec:forced}
@@ -317,7 +310,7 @@ Free and forced contributions are combined per side by the cubic power mean
 \mathit{Nu}_{F,\mathrm{mix}} = \big(\mathit{Nu}_{F,\mathrm{free}}^{\,3} + \mathit{Nu}_{F,\mathrm{forced}}^{\,3}\big)^{1/3},\qquad
 s_f = \frac{\mathit{Nu}_{F,\mathrm{forced}}^{\,3}}{\mathit{Nu}_{F,\mathrm{free}}^{\,3}+\mathit{Nu}_{F,\mathrm{forced}}^{\,3}},
 \end{equation}
-where $s_f$ is the forced share (\code{mixed\_convection} / \code{graefeMixedConvection.m}). Assisting and opposing flows are not distinguished. Options select the transition model (\code{transition}, \code{TI\_pct}), the angle-of-attack model (\code{angle\_model}; the windward side receives $g_W$, the other side $g_B$) and the turbulent free-convection branch (\code{free\_transition}). Without wind ($u=0$) the result is identical to pure free convection.
+where $s_f$ is the forced share (\code{mixed\_convection} / \code{graefeMixedConvection.m}). Assisting and opposing flows are not distinguished. Options select the transition model (\code{transition}, \code{TI\_pct}) and the angle-of-attack model (\code{angle\_model}; the windward side receives $g_W$, the other side $g_B$). Without wind ($u=0$) the result is identical to pure free convection.
 
 %=====================================================================
 \section{Conductances for heat, water vapour and CO\texorpdfstring{$_2$}{2}}\label{sec:scalar}
@@ -328,12 +321,11 @@ g_s = g_b\,(D_s/\kappa)^{k},\qquad k = 1 - m .
 \end{equation}
 The exponent differs between transport modes (Table~\ref{tab:kexp}). The general model (\code{leaf\_conductances} / \code{leafConductances.m}) uses the share-weighted mean, generalising \Gtt{17}:
 \begin{align}
-s_c &= \Nu_c/\max(\mathit{Nu}_{F,\mathrm{lam}},\Nu_c), & k_{\mathrm{free,lam}} &= 0.75 + 0.25\,s_c,\\
-k_{\mathrm{free}} &= (1-s_t)\,k_{\mathrm{free,lam}} + s_t\cdot\tfrac23, &
-k_{\mathrm{forced}} &= (1-f_t)\cdot\tfrac23 + f_t\cdot0.4,\\
+s_c &= \Nu_c/\max(\mathit{Nu}_{F,\mathrm{free}},\Nu_c), & k_{\mathrm{free}} &= 0.75 + 0.25\,s_c,\\
+k_{\mathrm{forced}} &= (1-f_t)\cdot\tfrac23 + f_t\cdot0.4, &
 k &= (1-s_f)\,k_{\mathrm{free}} + s_f\,k_{\mathrm{forced}},
 \end{align}
-with the conduction share $s_c$, the turbulent free share $s_t$ (Section~\ref{sec:freeturb}), the turbulent forced share $f_t$ = turbulent part / total of Eq.~\eqref{eq:lienhard}, and the forced share $s_f$. The diffusivities \citep{massman1998} are
+with the conduction share $s_c$, the turbulent forced share $f_t$ = turbulent part / total of Eq.~\eqref{eq:lienhard}, and the forced share $s_f$. The diffusivities \citep{massman1998} are
 \begin{equation}
 D_{\mathrm{H_2O}} = \ensuremath{2.12\times10^{-5}}\,f,\qquad D_{\mathrm{CO_2}} = \ensuremath{1.39\times10^{-5}}\,f\quad[\mathrm m^2\,\mathrm s^{-1}],\qquad
 f = \left(\frac{T_F}{273.15}\right)^{1.75}\frac{101325}{p}.
@@ -349,7 +341,6 @@ Mode & Law & $k$\\
 \midrule
 Conduction limit & $\Nu = \mathrm{const}$ & 1\\
 Laminar free convection & $\Nu\propto\Ra^{1/4}$ & 3/4\\
-Turbulent free convection & $\Nu\propto\Ra^{1/3}$ & 2/3\\
 Forced, laminar and transitional & $\Nu\propto\Prn^{1/3}$ & 2/3\\
 Forced, turbulent & $\Nu\propto\Prn^{0.6}$ & 0.4\\
 \bottomrule
@@ -380,7 +371,6 @@ Python & MATLAB & Purpose\\
 \code{wind\_streamline\_angle} & \code{windStreamlineAngle} & $\varphi_w$, in-plane fraction\\
 \code{wind\_attack\_angle} & \code{windAttackAngle} & $\beta$, windward side\\
 \code{free\_convection} & \code{graefeFreeConvection} & laminar free convection (paper)\\
-\code{free\_convection\_transition} & \code{freeConvectionTransition} & with turbulent branch\\
 \code{forced\_nusselt\_lienhard} & \code{forcedNusseltLienhard} & Eq.~\eqref{eq:lienhard}\\
 \code{angle\_of\_attack\_factors} & \code{angleOfAttackFactors} & $g_W$, $g_B$\\
 \code{forced\_nusselt\_leaf} & \code{forcedNusseltLeaf} & windward/leeward Nusselt numbers\\
@@ -435,7 +425,7 @@ forced share $s_f$ & \Exfshare & & \\
 \end{tabular}
 \end{table}
 
-\noindent Note that in the general model with $u=0$ the upper-side heat conductance (\ExgbStillU\,mm\,s$^{-1}$) slightly exceeds the laminar value (\ExgbU) because of the turbulent free-convection branch; the wind from the west runs along the short axis of the south-facing leaf ($\varphi_w = 0$, $\beta = 0$), so both sides receive the same forced contribution.
+\noindent Note that in the general model with $u=0$ the upper-side heat conductance (\ExgbStillU\,mm\,s$^{-1}$) equals the laminar free-convection value (\ExgbU); the wind from the west runs along the short axis of the south-facing leaf ($\varphi_w = 0$, $\beta = 0$), so both sides receive the same forced contribution.
 
 %=====================================================================
 \section{Verification}\label{sec:verification}
@@ -466,9 +456,10 @@ Python test & MATLAB test & Verified property\\
 \code{exact\_characteristic\_length\_matches\_eq9} & \code{exactCharacteristic\allowbreak Length} & Eq.~\eqref{eq:exact} vs.\ Eq.~9 ($<0.3\,\%$) for 3 shapes $\times$ 3 angles; $L_i = 0.816L$; $L_f/L_{Co} = 1.0286\pm0.002$; $n=1$ limit\\
 \code{wind\_streamline\_angle} & \code{windStreamlines} & N/E/NE wind on a horizontal south-facing leaf gives $\varphi_w = 90/0/45^\circ$; wind normal to a vertical leaf has no in-plane part; in-plane fraction $\cos 60^\circ$; normal-flow fallback\\
 \code{forced\_and\_mixed} & \code{mixedConvection} & laminar law identity; $u = 0$ reproduces free convection; strong wind: forced share $>0.9$; cubic blending inequality; $L_f$ along $>$ unknown $>$ across; monotone in $u$\\
-\code{lienhard\_transition} & \code{lienhardTransition} & onset bounds and value at TI = 5\,\%; laminar below onset; between laminar and fully turbulent above; continuity and monotonicity on 400 points; TI and uniform-flux effects; reported regimes; turbulent free branch: no effect at low $\Ra$, $>30\,\%$ at high $\Ra$, stable side unchanged; MATLAB: three values against Python\\
+\code{lienhard\_transition} & \code{lienhardTransition} & onset bounds and value at TI = 5\,\%; laminar below onset; between laminar and fully turbulent above; continuity and monotonicity on 400 points; TI and uniform-flux effects; reported regimes; MATLAB: three values against Python\\
 \code{angle\_of\_attack\_model} & \code{angleOfAttackModel} & factors 1 in parallel flow; $g_W(90^\circ) = 1+a_W$; leeward peak $>1.15$ at 10--35$^\circ$, $<1$ at $90^\circ$; $f_e$ scaling; $\beta$ and windward side for horizontal, vertical and inclined leaves; windward side stronger at $60^\circ$\\
-\code{scalar\_conductances} & \code{scalarConductances} & $D_{\mathrm{H_2O}}/D_{\mathrm{CO_2}}$; pure-mode exponents $1$, $3/4$, $2/3$, $0.4$; $g_v>g_b>g_c$; $k\to2/3$ in laminar wind; turbulent forced and free shares lower $k$; vectorisation\\
+\code{ryms2025\_two\_sided\_plate} & \code{ryms2025TwoSidedPlate} & horizontal $150\times75$\,mm plate heated on both sides \citep{ryms2025}: laminar $C_U$, $C_L$ within 10\,\% of the two-sided CFD (0.601, 0.812); upper side weaker\\
+\code{scalar\_conductances} & \code{scalarConductances} & $D_{\mathrm{H_2O}}/D_{\mathrm{CO_2}}$; pure-mode exponents $1$, $3/4$, $2/3$, $0.4$; $g_v>g_b>g_c$; $k\to2/3$ in laminar wind; turbulent forced share lowers $k$; still air equals the laminar free-convection model; vectorisation\\
 \code{reference\_values} & \code{matchesPython\allowbreak Reference} & \NRefCases\ free-convection reference cases (rel.\ tol.\ $10^{-9}$)\\
 \code{reference\_values\_mixed} & \code{matchesPython\allowbreak ReferenceMixed} & \NRefmixedCases\ mixed-convection cases\\
 \code{reference\_values\_angle} & \code{matchesPython\allowbreak ReferenceAngle} & \NRefangleCases\ transition + angle-of-attack cases\\
@@ -503,7 +494,9 @@ The Python column reflects the regression of the current Python environment agai
 \subsection{Free-convection core}
 The laminar free-convection model and its parameters (Table~3) were derived and validated by \citet{graefe2022} against CFD simulations of elliptical leaves and against the measurements of \citet{hassani1989}. The present implementation reproduces the qualitative and quantitative behaviour of Fig.~6b of the paper (Fig.~\ref{fig:free}a, unit test \code{fig6\_magnitudes\_and\_convergence}) and the published value $L_i = 0.816L$.
 
-As an additional check, the laminar model was compared with free-convection measurements of horizontal disks and squares ($\Ra$ 18 to \ensuremath{7.6\times10^{7}}; \citealp{hassani1989}) and of inclined 2\,cm disks \citep{kobus2002}; horizontal disks of 5--20\,mm \citep{kobus2001} were used as an additional check. The model underpredicts the data of \citet{hassani1989} by about 20\,\% and those of \citet{kobus2002} by about 10\,\%, which is consistent with the model assigning no transfer to the leaf edges, whereas the test bodies have heated edges. With the turbulent $\Ra^{1/3}$ branch the deviation from \citet{hassani1989} is reduced to $-14\,\%$.
+As an additional check, the laminar model was compared with free-convection measurements of horizontal disks and squares ($\Ra$ 18 to \ensuremath{7.6\times10^{7}}; \citealp{hassani1989}) and of inclined 2\,cm disks \citep{kobus2002}; horizontal disks of 5--20\,mm \citep{kobus2001} were used as an additional check. The model underpredicts the data of \citet{hassani1989} by about 20\,\% and those of \citet{kobus2002} by about 10\,\%, which is consistent with the model assigning no transfer to the leaf edges, whereas the test bodies have heated edges.
+
+\paragraph{Horizontal plate heated on both sides.} \citet{ryms2025} measured free convection in air simultaneously from the upper and lower surface of a horizontal $150\times75\times2.1$\,mm plate heated on both sides ($\Ra_b = 10^5$--$1.6\times10^{6}$ with the width $b = 75$\,mm, laminar) and computed the same plate by CFD with both sides heated and with one side heated. A plate heated on both sides is the situation of a horizontal leaf. Only temperature differences up to 10\,K (the leaf range: $\Delta T = 3$--10\,K, $\Ra_b = 1.3$--$4.2\times10^{5}$, and the two tabulated points per side with $\Delta T\le10$\,K) are considered. Evaluated for the equal-area ellipse of aspect ratio 2 ($L_h = 27.4$\,mm) and expressed as $\Nu_b = C\,\Ra_b^{0.2}$ (\code{python/validate\_ryms2025.py}), the laminar core gives $C_U = 0.574$--0.577 and $C_L = 0.80$--0.83, against 0.601 and 0.812 for the two-sided CFD ($-4$ to $-5\,\%$ and $-1$ to $+2\,\%$), 0.941 and 0.808 for the one-sided CFD and 0.804 and 0.744 for the measurements. The model thus reproduces the central result of the paper that the upper side of a plate heated on both sides is weaker than the lower side ($U/L$ = 0.70--0.72, CFD 0.74), whereas one-sided plates give $U/L > 1$. Against the measurements the upper side is 20\,\% low (tabulated points 0.80 and 0.79), the lower side 34--56\,\% high on the two points (8--11\,\% on the fitted correlation; strongly scattered); the authors find their own upper-side measurement 34\,\% above their CFD and leave the difference unresolved. The data are laminar throughout (slope 0.17--0.27), which supports the absence of a turbulent branch in the leaf range (Section~\ref{sec:freerange}). The regression tests \code{ryms2025\_two\_sided\_plate} hold the laminar core within 10\,\% of the two-sided CFD correlations.
 
 \subsection{Forced-convection extensions}
 \paragraph{Data.} The transition, angle-of-attack and finite-plate parameters were fitted on 12 October 2026 to 1169 digitised literature measurements of mean Nusselt numbers of finite flat plates, disks and leaf models in forced convection \citep{chen1988a,chen1988b,haseba1973,haseba1984,sparrow1977,sparrow1979,parkhurst1968,powell1940,schuepp1993,ramirez2002,kobus2006,motwani1985,ausderwiesche2016}. The data cover $\Rey = \ensuremath{1.3\times10^{3}}$--\ensuremath{1.6\times10^{5}}, angles of attack 0--90$^\circ$, windward, leeward and two-sided measurements and turbulence intensities 0.2--22\,\%. Heat and mass transfer measurements (naphthalene sublimation, evaporation, electrochemical method) were converted to $\Nu$ at $\Prn = 0.71$ by the heat--mass transfer analogy. The fit set comprises 815 rows of thin plates with $\Rey\,t/L<2000$ and wind-tunnel blockage $\le0.12$; the thick bodies of \citet{ausderwiesche2016} and \citet{motwani1985} are excluded as outside the model's scope.
@@ -576,7 +569,7 @@ No measurements with simultaneous forced and free convection were available. The
 %=====================================================================
 \begin{itemize}
 \item \textbf{Shape.} Flat, elliptical, undissected leaves with $AR\approx1$--4; leaf curvature, lobes, serration, petioles and hairs are not represented. Edges carry no transfer.
-\item \textbf{Free convection.} Laminar core validated for leaf-sized ellipses and $\Ra_L$ typical of leaves; the turbulent branch is an extension with a generic coefficient (0.14) and has not been calibrated for leaves.
+\item \textbf{Free convection.} Laminar core validated for leaf-sized ellipses and $\Ra_L$ typical of leaves and against the two-sided plate of \citet{ryms2025}. There is no turbulent branch: leaves with $\Delta T\le10$\,K and $L\le0.3$\,m stay two orders of magnitude below the turbulent onset (Section~\ref{sec:freerange}); metre-sized leaves at large $\Delta T$ ($\Ra_{L_h}\gtrsim10^{7}$, $\Ra_{L_i}\gtrsim10^{9}$) are outside the validated range.
 \item \textbf{Forced convection.} Angle-of-attack model fitted for thin plates, $\Rey = \ensuremath{1.3\times10^{3}}$--\ensuremath{1.6\times10^{5}}, $\beta = 0$--$90^\circ$, TI $\le 22\,\%$. Extrapolation to canopy turbulence ($\mathrm{TI} > 30\,\%$), to fluttering leaves and to leaves sheltered by neighbours is untested. Blunt bodies ($\Rey\,t/L\ge2000$) are outside the fit.
 \item \textbf{Wind geometry.} The horizontal wind is assumed; vertical wind components and the reduction of the in-plane velocity component are not applied. Yaw (flow direction within the leaf plane) enters only through $L_f$.
 \item \textbf{Mixed convection.} Cubic blending without distinction of assisting and opposing flow; not validated against mixed-convection data.
@@ -602,7 +595,7 @@ All figures and numerical values in Sections~\ref{sec:geometry}--\ref{sec:verifi
 \appendix
 \section{Source register}\label{app:sources}
 %=====================================================================
-Table~\ref{tab:register} lists every source cited, its role in the model or the validation and the verification status of its bibliographic data. Journal entries were verified against Crossref on 12 October 2026 (\code{docs/references.md}); the four additional sources used only in this document (\citealp{campbell1998,monteith1973,pohlhausen1921,sutherland1893}) were verified on 13 October 2026.
+Table~\ref{tab:register} lists every source cited, its role in the model or the validation and the verification status of its bibliographic data. Journal entries were verified against Crossref on 12 October 2026 (\code{docs/references.md}; \citealp{ryms2025}: DOI taken from the article); the four additional sources used only in this document (\citealp{campbell1998,monteith1973,pohlhausen1921,sutherland1893}) were verified on 13 October 2026.
 
 {\small
 \begin{longtable}{>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{9.3cm}>{\raggedright\arraybackslash}p{1.8cm}}
@@ -627,6 +620,7 @@ Source & Use & Status\\
 \citet{monteith1973} & simple empirical $g_b$ (\code{monteith\_gb}) & –\\
 \citet{hassani1989} & free convection of disks and squares (validation) & V\\
 \citet{kobus2001,kobus2002} & free convection of horizontal and inclined disks (validation) & V\\
+\citet{ryms2025} & free convection of a horizontal plate heated on both sides, experiment and CFD per side (validation; laminar range of leaves) & V\\
 \citet{kobus1996} & mixed convection, candidate data (not used) & V\\
 \citet{chen1988a} & forced, parallel flow, TI 3--22\,\%, two-sided & V\\
 \citet{chen1988b} & forced, angle of attack 0--180$^\circ$, windward/leeward/two-sided & V\\

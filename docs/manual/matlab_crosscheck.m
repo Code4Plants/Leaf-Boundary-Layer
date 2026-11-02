@@ -46,7 +46,7 @@ cases = asCell(ref.scalar_cases); dev = 0; nval = 0;
 for i = 1:numel(cases)
     c = cases{i};
     r = leafConductances(293.15 + c.dT, 293.15, c.u, c.L, c.W, c.alpha_x, 0, 180, c.wind_from, [], [], [], c.TI);
-    for key = {'gb_U', 'gb_L', 'gv_U', 'gv_L', 'gc_U', 'gc_L', 'k_U', 'k_L', 'cond_share_U', 'free_share_U', 'free_turb_share_U', 'forced_turb_share_U'}
+    for key = {'gb_U', 'gb_L', 'gv_U', 'gv_L', 'gc_U', 'gc_L', 'k_U', 'k_L', 'cond_share_U', 'free_share_U', 'forced_turb_share_U'}
         dev = max(dev, relDev(r.(key{1}), c.(key{1}))); nval = nval + 1;
     end
 end

@@ -1,4 +1,4 @@
-function r = graefeMixedConvection(TL, TA, u, L, W, alphaXdeg, alphaYdeg, leafAzimuthDeg, windFromDeg, p, eL, eA, cForced, transition, TIpct, bc, angleModel, freeTransition)
+function r = graefeMixedConvection(TL, TA, u, L, W, alphaXdeg, alphaYdeg, leafAzimuthDeg, windFromDeg, p, eL, eA, cForced, transition, TIpct, bc, angleModel)
 %GRAEFEMIXEDCONVECTION Mixed free/forced convection of an inclined elliptical leaf.
 %   r = graefeMixedConvection(TL, TA, u, L, W, alphaX, alphaY, leafAzimuth, windFrom, p, eL, eA, cForced)
 %
@@ -31,8 +31,6 @@ if nargin < 14 || isempty(transition), transition = false; end
 if nargin < 15 || isempty(TIpct), TIpct = 1.0; end
 if nargin < 16 || isempty(bc), bc = 'isothermal'; end
 if nargin < 17 || isempty(angleModel), angleModel = false; end
-if nargin < 18 || isempty(freeTransition), freeTransition = false; end
-%   freeTransition = true uses freeConvectionTransition (Ra^(1/3) branch) for the free part.
 %   transition = true uses the Lienhard (2020) laminar-transitional-turbulent average
 %   (forcedNusseltLienhard) with the onset from the turbulence intensity TIpct.
 %   angleModel = true multiplies the forced part by the finite-plate enhancement f_e
@@ -41,13 +39,7 @@ if nargin < 18 || isempty(freeTransition), freeTransition = false; end
 %   (windAttackAngle; beta = 0 when windFromDeg is empty).
 nForced = 0.5; Pr = 0.71; cp = 1004.0;
 
-if freeTransition
-    free = freeConvectionTransition(TL, TA, L, W, alphaXdeg, alphaYdeg, p, eL, eA);
-else
-    free = graefeFreeConvection(TL, TA, L, W, alphaXdeg, alphaYdeg, p, eL, eA);
-    free.NuF_lam_U = free.NuF_U; free.NuF_lam_L = free.NuF_L;
-    free.free_turb_share_U = zeros(size(free.NuF_U)); free.free_turb_share_L = zeros(size(free.NuF_L));
-end
+free = graefeFreeConvection(TL, TA, L, W, alphaXdeg, alphaYdeg, p, eL, eA);
 g = free.geometry;
 if isempty(windFromDeg)
     D0 = 4 * g.S / g.P;                                        % (4/pi) LCo, LCo = pi S / P (Eq. 5)

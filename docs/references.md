@@ -1,7 +1,7 @@
 # References
 
 Bibliography of the model and of the validation data (BibTeX: `references.bib`). All
-journal entries were verified against Crossref on 2026-10-12; items without a DOI are
+journal entries were verified against Crossref on 2026-10-12 (Ryms et al. 2025: DOI taken from the article, added 2026-10-30); items without a DOI are
 marked. The *Use* column states where each source enters the model or the validation.
 
 | Reference | Use |
@@ -27,6 +27,7 @@ marked. The *Use* column states where each source enters the model or the valida
 | Parkhurst, D.F., Duncan, P.R., Gates, D.M., Kreith, F. (1968). Wind-tunnel modelling of convection of heat between air and broad leaves of plants. *Agricultural Meteorology* 5(1), 33–47. https://doi.org/10.1016/0002-1571(68)90021-6 | leaf models (ellipses, aspect ratio 0.5–2), two-sided |
 | Powell, R.W. (1940). Further experiments on the evaporation of water from saturated surfaces. *Transactions of the Institution of Chemical Engineers* 18, 36–50. (no DOI) | evaporation plates, angle of attack 0–180° |
 | Ramirez, C., Murray, D.B., Fitzpatrick, J.A. (2002). Convective heat transfer of an inclined rectangular plate. *Experimental Heat Transfer* 15(1), 1–18. https://doi.org/10.1080/089161502753341834 | strip 18×170 mm, angle of attack 0–180° |
+| Ryms, M., Tesch, K., Lewandowski, W.M. (2025). Experimental and numerical study of free convective heat transfer in air performed simultaneously from the upper and lower surfaces of a horizontal plate heated on both sides. *International Journal of Heat and Mass Transfer* 245, 126973. https://doi.org/10.1016/j.ijheatmasstransfer.2025.126973 | free convection, horizontal 150×75 mm plate heated on both sides, Ra_b 1e5–1.6e6, experiment and CFD per side (validation of the two-sided laminar core; range of the turbulent branch) |
 | Schuepp, P.H. (1993). Tansley Review No. 59. Leaf boundary layers. *New Phytologist* 125(3), 477–507. https://doi.org/10.1111/j.1469-8137.1993.tb03898.x | leeward transfer of rectangles (electrochemical method), streamline-length weighting (Eq. 4 of the paper) |
 | Sparrow, E.M., Tien, K.K. (1977). Forced convection heat transfer at an inclined and yawed square plate—Application to solar collectors. *Journal of Heat Transfer* 99(4), 507–512. https://doi.org/10.1115/1.3450734 | square plate, attack 25–90°, yaw 0–45° (naphthalene) |
 | Sparrow, E.M., Ramsey, J.W., Mass, E.A. (1979). Effect of finite width on heat transfer and fluid flow about an inclined rectangular plate. *Journal of Heat Transfer* 101(2), 199–204. https://doi.org/10.1115/1.3450946 | rectangles of aspect ratio 0.4 and 2.5 at angle of attack |
